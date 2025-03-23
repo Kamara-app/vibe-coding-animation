@@ -33,6 +33,7 @@
             border-radius: 50%;
             animation: twinkle var(--twinkle-duration, 4s) infinite ease-in-out;
             z-index: 1;
+            transition: transform 0.5s ease-out;
         }
 
         @keyframes twinkle {
@@ -80,6 +81,8 @@
             border-radius: 50%;
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
             z-index: 3;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
         }
 
         .planet-1 {
@@ -124,6 +127,46 @@
             border: 4px solid rgba(255, 255, 255, 0.2);
             transform: rotateX(75deg);
             z-index: 2;
+        }
+
+        .planet.attracting {
+            animation-play-state: paused;
+        }
+
+        .planet-1.attracting {
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.8);
+        }
+
+        .planet-2.attracting {
+            box-shadow: 0 0 50px rgba(52, 152, 219, 0.8);
+        }
+
+        .planet-3.attracting {
+            box-shadow: 0 0 40px rgba(241, 196, 15, 0.8);
+        }
+
+        .planet-4.attracting {
+            box-shadow: 0 0 60px rgba(26, 188, 156, 0.8);
+        }
+
+        .attraction-particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            z-index: 2;
+            pointer-events: none;
+            animation: attract-particle 1s forwards;
+        }
+
+        @keyframes attract-particle {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
         }
 
         @keyframes rotate {
@@ -224,6 +267,11 @@
             const universe = document.getElementById('universe');
             const width = window.innerWidth;
             const height = window.innerHeight;
+            
+            // Store all stars and their original positions
+            const stars = [];
+            let activePlanet = null;
+            let attractionInterval = null;
 
             // Create stars
             function createStars(count) {
@@ -237,13 +285,25 @@
                     star.style.height = `${size}px`;
                     
                     // Random position
-                    star.style.left = `${Math.random() * 100}%`;
-                    star.style.top = `${Math.random() * 100}%`;
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 100;
+                    star.style.left = `${left}%`;
+                    star.style.top = `${top}%`;
                     
                     // Random twinkle duration
                     star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
                     
                     universe.appendChild(star);
+                    
+                    // Store the star with its original position
+                    stars.push({
+                        element: star,
+                        originalLeft: left,
+                        originalTop: top,
+                        currentLeft: left,
+                        currentTop: top,
+                        size: size
+                    });
                 }
             }
 
@@ -311,6 +371,138 @@
                 planet4.style.left = `${width * 0.4}px`;
                 planet4.style.top = `${height * 0.75}px`;
                 universe.appendChild(planet4);
+                
+                // Add event listeners to all planets
+                const planets = document.querySelectorAll('.planet');
+                planets.forEach(planet => {
+                    // Mouse events
+                    planet.addEventListener('mousedown', startAttraction);
+                    
+                    // Touch events
+                    planet.addEventListener('touchstart', (e) => {
+                        e.preventDefault(); // Prevent default touch behavior
+                        startAttraction.call(planet, e);
+                    });
+                });
+                
+                // Add global event listeners for ending attraction
+                document.addEventListener('mouseup', stopAttraction);
+                document.addEventListener('touchend', stopAttraction);
+                document.addEventListener('mouseleave', stopAttraction);
+            }
+
+            // Start attracting stars to a planet
+            function startAttraction(e) {
+                // If already attracting, don't start again
+                if (activePlanet) return;
+                
+                activePlanet = this;
+                activePlanet.classList.add('attracting');
+                
+                // Get planet center position
+                const planetRect = activePlanet.getBoundingClientRect();
+                const planetCenterX = planetRect.left + planetRect.width / 2;
+                const planetCenterY = planetRect.top + planetRect.height / 2;
+                
+                // Start attraction animation
+                attractionInterval = setInterval(() => {
+                    attractStarsTowardsPlanet(planetCenterX, planetCenterY);
+                    createAttractionParticles(planetCenterX, planetCenterY);
+                }, 100);
+            }
+            
+            // Stop attracting stars
+            function stopAttraction() {
+                if (!activePlanet) return;
+                
+                clearInterval(attractionInterval);
+                activePlanet.classList.remove('attracting');
+                activePlanet = null;
+                
+                // Return stars to original positions
+                returnStarsToOriginalPositions();
+            }
+            
+            // Attract stars towards the planet
+            function attractStarsTowardsPlanet(planetX, planetY) {
+                stars.forEach(star => {
+                    const rect = star.element.getBoundingClientRect();
+                    const starX = rect.left + rect.width / 2;
+                    const starY = rect.top + rect.height / 2;
+                    
+                    // Calculate distance to planet
+                    const dx = planetX - starX;
+                    const dy = planetY - starY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Calculate attraction strength (stronger when closer)
+                    const maxDistance = Math.sqrt(width * width + height * height) / 2;
+                    const attractionStrength = Math.max(0, 1 - distance / maxDistance) * 0.05;
+                    
+                    // Update star position
+                    star.currentLeft += (dx / width) * 100 * attractionStrength;
+                    star.currentTop += (dy / height) * 100 * attractionStrength;
+                    
+                    star.element.style.left = `${star.currentLeft}%`;
+                    star.element.style.top = `${star.currentTop}%`;
+                });
+            }
+            
+            // Create particles that flow toward the planet
+            function createAttractionParticles(planetX, planetY) {
+                // Create 3-5 particles
+                const particleCount = Math.floor(Math.random() * 3) + 3;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('attraction-particle');
+                    
+                    // Random size
+                    const size = Math.random() * 3 + 1;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // Random starting position around the universe
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.min(width, height) * 0.4;
+                    const startX = planetX + Math.cos(angle) * distance;
+                    const startY = planetY + Math.sin(angle) * distance;
+                    
+                    particle.style.left = `${startX}px`;
+                    particle.style.top = `${startY}px`;
+                    
+                    // Set target position (planet center)
+                    const tx = planetX - startX;
+                    const ty = planetY - startY;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    universe.appendChild(particle);
+                    
+                    // Remove after animation completes
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 1000);
+                }
+            }
+            
+            // Return stars to their original positions
+            function returnStarsToOriginalPositions() {
+                stars.forEach(star => {
+                    // Animate back to original position
+                    star.element.style.transition = 'left 1s ease-out, top 1s ease-out';
+                    star.element.style.left = `${star.originalLeft}%`;
+                    star.element.style.top = `${star.originalTop}%`;
+                    
+                    // Reset current position
+                    star.currentLeft = star.originalLeft;
+                    star.currentTop = star.originalTop;
+                    
+                    // Remove transition after animation completes
+                    setTimeout(() => {
+                        star.element.style.transition = '';
+                    }, 1000);
+                });
             }
 
             // Create particles
@@ -410,6 +602,11 @@
                     ring.style.left = `${newWidth * 0.7 - 40}px`;
                     ring.style.top = `${newHeight * 0.6 + 40}px`;
                 }
+                
+                // Stop any ongoing attraction
+                if (activePlanet) {
+                    stopAttraction();
+                }
             }
 
             // Initialize
@@ -424,6 +621,9 @@
 
             // Add interactive star creation on click
             universe.addEventListener('click', (e) => {
+                // Don't create stars if we're attracting to a planet
+                if (activePlanet) return;
+                
                 // Create a burst of stars at click position
                 for (let i = 0; i < 10; i++) {
                     const star = document.createElement('div');
@@ -436,18 +636,38 @@
                     // Position around click
                     const offsetX = (Math.random() - 0.5) * 50;
                     const offsetY = (Math.random() - 0.5) * 50;
-                    star.style.left = `${e.clientX + offsetX}px`;
-                    star.style.top = `${e.clientY + offsetY}px`;
+                    const left = ((e.clientX + offsetX) / width) * 100;
+                    const top = ((e.clientY + offsetY) / height) * 100;
+                    
+                    star.style.left = `${left}%`;
+                    star.style.top = `${top}%`;
                     
                     star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
                     
                     universe.appendChild(star);
                     
+                    // Add to stars array
+                    stars.push({
+                        element: star,
+                        originalLeft: left,
+                        originalTop: top,
+                        currentLeft: left,
+                        currentTop: top,
+                        size: size
+                    });
+                    
                     // Remove after some time
                     setTimeout(() => {
                         star.style.transition = 'opacity 1s';
                         star.style.opacity = '0';
-                        setTimeout(() => star.remove(), 1000);
+                        setTimeout(() => {
+                            // Remove from stars array
+                            const index = stars.findIndex(s => s.element === star);
+                            if (index !== -1) {
+                                stars.splice(index, 1);
+                            }
+                            star.remove();
+                        }, 1000);
                     }, 5000);
                 }
             });
