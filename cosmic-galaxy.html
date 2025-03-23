@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Galaxy Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            font-family: Arial, sans-serif;
+        }
+
+        .universe {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #0a0a2a, #1a0b2e 30%, #2c0b46 70%, #1e0523);
+            overflow: hidden;
+        }
+
+        /* Stars */
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--twinkle-duration, 4s) infinite ease-in-out;
+            z-index: 1;
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Shooting star */
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0;
+            filter: blur(1px);
+            z-index: 2;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translate(0, 0) rotate(var(--angle));
+                opacity: 1;
+                width: 4px;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--distance), var(--distance)) rotate(var(--angle));
+                opacity: 0;
+                width: 40px;
+            }
+        }
+
+        /* Planets */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 3;
+        }
+
+        .planet-1 {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #e67e22, #d35400);
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.3);
+            animation: rotate 120s infinite linear, float 20s infinite ease-in-out;
+        }
+
+        .planet-2 {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 40% 40%, #3498db, #2980b9);
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.4);
+            animation: rotate 180s infinite linear reverse, float 25s infinite ease-in-out;
+        }
+
+        .planet-3 {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 35% 35%, #f1c40f, #f39c12);
+            box-shadow: 0 0 25px rgba(241, 196, 15, 0.5);
+            animation: rotate 100s infinite linear, float 15s infinite ease-in-out;
+        }
+
+        .planet-4 {
+            width: 150px;
+            height: 150px;
+            background: 
+                radial-gradient(circle at 30% 30%, #16a085, #1abc9c),
+                repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255, 255, 255, 0.1) 10px, rgba(255, 255, 255, 0.1) 20px);
+            box-shadow: 0 0 35px rgba(26, 188, 156, 0.3);
+            animation: rotate 200s infinite linear reverse, float 30s infinite ease-in-out;
+        }
+
+        .planet-ring {
+            position: absolute;
+            width: 200px;
+            height: 40px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            transform: rotateX(75deg);
+            z-index: 2;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(-10px);
+            }
+            50% {
+                transform: translateY(10px);
+            }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            filter: blur(1px);
+            z-index: 1;
+            animation: float-particle var(--float-duration, 60s) infinite linear;
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: var(--max-opacity, 0.3);
+            }
+            90% {
+                opacity: var(--max-opacity, 0.3);
+            }
+            100% {
+                transform: translate(var(--x-distance, 100px), var(--y-distance, 100px));
+                opacity: 0;
+            }
+        }
+
+        /* Nebula */
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(30px);
+            opacity: 0.15;
+            z-index: 0;
+            animation: pulse 20s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.15;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.1;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .planet-1 { width: 60px; height: 60px; }
+            .planet-2 { width: 90px; height: 90px; }
+            .planet-3 { width: 45px; height: 45px; }
+            .planet-4 { width: 110px; height: 110px; }
+            .planet-ring { width: 150px; height: 30px; }
+        }
+
+        @media (max-width: 480px) {
+            .planet-1 { width: 40px; height: 40px; }
+            .planet-2 { width: 70px; height: 70px; }
+            .planet-3 { width: 30px; height: 30px; }
+            .planet-4 { width: 80px; height: 80px; }
+            .planet-ring { width: 110px; height: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="universe" id="universe">
+        <!-- Elements will be dynamically added with JavaScript -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const universe = document.getElementById('universe');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // Create stars
+            function createStars(count) {
+                for (let i = 0; i < count; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    
+                    // Random size between 1 and 3px
+                    const size = Math.random() * 2 + 1;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random position
+                    star.style.left = `${Math.random() * 100}%`;
+                    star.style.top = `${Math.random() * 100}%`;
+                    
+                    // Random twinkle duration
+                    star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
+                    
+                    universe.appendChild(star);
+                }
+            }
+
+            // Create shooting stars periodically
+            function createShootingStars() {
+                setInterval(() => {
+                    const shootingStar = document.createElement('div');
+                    shootingStar.classList.add('shooting-star');
+                    
+                    // Random position
+                    shootingStar.style.left = `${Math.random() * 80}%`;
+                    shootingStar.style.top = `${Math.random() * 40}%`;
+                    
+                    // Random angle and distance
+                    const angle = Math.random() * 60 - 30; // -30 to 30 degrees
+                    const distance = Math.random() * 300 + 200;
+                    
+                    shootingStar.style.setProperty('--angle', `${angle}deg`);
+                    shootingStar.style.setProperty('--distance', `${distance}px`);
+                    
+                    // Animation
+                    shootingStar.style.animation = `shoot ${Math.random() * 2 + 1}s forwards`;
+                    
+                    universe.appendChild(shootingStar);
+                    
+                    // Remove after animation completes
+                    setTimeout(() => {
+                        shootingStar.remove();
+                    }, 3000);
+                }, 4000);
+            }
+
+            // Create planets
+            function createPlanets() {
+                // Planet 1 - Orange/Red
+                const planet1 = document.createElement('div');
+                planet1.classList.add('planet', 'planet-1');
+                planet1.style.left = `${width * 0.2}px`;
+                planet1.style.top = `${height * 0.3}px`;
+                universe.appendChild(planet1);
+                
+                // Planet 2 - Blue with ring
+                const planet2 = document.createElement('div');
+                planet2.classList.add('planet', 'planet-2');
+                planet2.style.left = `${width * 0.7}px`;
+                planet2.style.top = `${height * 0.6}px`;
+                universe.appendChild(planet2);
+                
+                const ring = document.createElement('div');
+                ring.classList.add('planet-ring');
+                ring.style.left = `${width * 0.7 - 40}px`;
+                ring.style.top = `${height * 0.6 + 40}px`;
+                universe.appendChild(ring);
+                
+                // Planet 3 - Yellow/Gold
+                const planet3 = document.createElement('div');
+                planet3.classList.add('planet', 'planet-3');
+                planet3.style.left = `${width * 0.85}px`;
+                planet3.style.top = `${height * 0.2}px`;
+                universe.appendChild(planet3);
+                
+                // Planet 4 - Teal/Green
+                const planet4 = document.createElement('div');
+                planet4.classList.add('planet', 'planet-4');
+                planet4.style.left = `${width * 0.4}px`;
+                planet4.style.top = `${height * 0.75}px`;
+                universe.appendChild(planet4);
+            }
+
+            // Create particles
+            function createParticles(count) {
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // Random size between 1 and 4px
+                    const size = Math.random() * 3 + 1;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // Random position
+                    particle.style.left = `${Math.random() * width}px`;
+                    particle.style.top = `${Math.random() * height}px`;
+                    
+                    // Random movement
+                    const xDistance = (Math.random() - 0.5) * 200;
+                    const yDistance = (Math.random() - 0.5) * 200;
+                    particle.style.setProperty('--x-distance', `${xDistance}px`);
+                    particle.style.setProperty('--y-distance', `${yDistance}px`);
+                    
+                    // Random duration and opacity
+                    const duration = Math.random() * 40 + 20;
+                    const maxOpacity = Math.random() * 0.3 + 0.1;
+                    particle.style.setProperty('--float-duration', `${duration}s`);
+                    particle.style.setProperty('--max-opacity', maxOpacity);
+                    
+                    universe.appendChild(particle);
+                    
+                    // Recreate particle after animation
+                    setTimeout(() => {
+                        particle.remove();
+                        createParticles(1);
+                    }, duration * 1000);
+                }
+            }
+
+            // Create nebula clouds
+            function createNebulas(count) {
+                const colors = [
+                    'rgba(142, 68, 173, 0.3)',
+                    'rgba(41, 128, 185, 0.3)',
+                    'rgba(39, 174, 96, 0.3)',
+                    'rgba(211, 84, 0, 0.3)',
+                    'rgba(192, 57, 43, 0.3)'
+                ];
+                
+                for (let i = 0; i < count; i++) {
+                    const nebula = document.createElement('div');
+                    nebula.classList.add('nebula');
+                    
+                    // Random size
+                    const size = Math.random() * 300 + 200;
+                    nebula.style.width = `${size}px`;
+                    nebula.style.height = `${size}px`;
+                    
+                    // Random position
+                    nebula.style.left = `${Math.random() * width}px`;
+                    nebula.style.top = `${Math.random() * height}px`;
+                    
+                    // Random color
+                    nebula.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // Random animation delay
+                    nebula.style.animationDelay = `${Math.random() * 10}s`;
+                    
+                    universe.appendChild(nebula);
+                }
+            }
+
+            // Handle window resize
+            function handleResize() {
+                const newWidth = window.innerWidth;
+                const newHeight = window.innerHeight;
+                
+                // Update planet positions
+                const planets = document.querySelectorAll('.planet');
+                const ring = document.querySelector('.planet-ring');
+                
+                if (planets.length >= 4) {
+                    planets[0].style.left = `${newWidth * 0.2}px`;
+                    planets[0].style.top = `${newHeight * 0.3}px`;
+                    
+                    planets[1].style.left = `${newWidth * 0.7}px`;
+                    planets[1].style.top = `${newHeight * 0.6}px`;
+                    
+                    planets[2].style.left = `${newWidth * 0.85}px`;
+                    planets[2].style.top = `${newHeight * 0.2}px`;
+                    
+                    planets[3].style.left = `${newWidth * 0.4}px`;
+                    planets[3].style.top = `${newHeight * 0.75}px`;
+                }
+                
+                if (ring) {
+                    ring.style.left = `${newWidth * 0.7 - 40}px`;
+                    ring.style.top = `${newHeight * 0.6 + 40}px`;
+                }
+            }
+
+            // Initialize
+            createStars(200);
+            createPlanets();
+            createParticles(50);
+            createNebulas(5);
+            createShootingStars();
+            
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+
+            // Add interactive star creation on click
+            universe.addEventListener('click', (e) => {
+                // Create a burst of stars at click position
+                for (let i = 0; i < 10; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    
+                    const size = Math.random() * 2 + 1;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Position around click
+                    const offsetX = (Math.random() - 0.5) * 50;
+                    const offsetY = (Math.random() - 0.5) * 50;
+                    star.style.left = `${e.clientX + offsetX}px`;
+                    star.style.top = `${e.clientY + offsetY}px`;
+                    
+                    star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
+                    
+                    universe.appendChild(star);
+                    
+                    // Remove after some time
+                    setTimeout(() => {
+                        star.style.transition = 'opacity 1s';
+                        star.style.opacity = '0';
+                        setTimeout(() => star.remove(), 1000);
+                    }, 5000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
